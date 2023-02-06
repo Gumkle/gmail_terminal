@@ -1,13 +1,12 @@
 /*
 Copyright © 2023 NAME HERE <EMAIL ADDRESS>
-
 */
 package cmd
 
 import (
-	"fmt"
-
 	"github.com/spf13/cobra"
+	"wire_test/pkg/auth"
+	"wire_test/pkg/config"
 )
 
 // logoutCmd represents the logout command
@@ -21,7 +20,12 @@ Cobra is a CLI library for Go that empowers applications.
 This application is a tool to generate the needed files
 to quickly create a Cobra application.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("logout called")
+		authenticator, err := auth.InitializeAuthenticator(config.GoogleSmtpAddress, config.StorageDirectory)
+		if err != nil {
+			cmd.PrintErrf("authenticator init failed: %v\n", err)
+			return
+		}
+		authenticator.Logout()
 	},
 }
 

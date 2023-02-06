@@ -16,7 +16,7 @@ type FileSystem struct {
 func NewFileSystem(appDataRoot PathString) (*FileSystem, error) {
 	normalizedRoot := strings.Trim(strings.TrimPrefix(string(appDataRoot), "/tmp/"), "/")
 	normalizedRoot = fmt.Sprintf("/tmp/%s", normalizedRoot)
-	err := os.Mkdir(normalizedRoot, fs.ModePerm)
+	err := os.MkdirAll(normalizedRoot, fs.ModePerm)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create app data directory: %w", err)
 	}
@@ -34,6 +34,15 @@ func (f *FileSystem) Save(destination, contents string) error {
 	_, err = file.WriteString(contents)
 	if err != nil {
 		return fmt.Errorf("failed to write to file: %w", err)
+	}
+	return nil
+}
+
+func (f *FileSystem) Remove(path string) error {
+	fullPath := fmt.Sprintf("%s/%s", f.root, path)
+	err := os.Remove(fullPath)
+	if err != nil {
+		return fmt.Errorf("failed to remove file: %w", err)
 	}
 	return nil
 }
