@@ -1,17 +1,10 @@
 package cmd
 
 import (
-	"fmt"
 	"github.com/spf13/cobra"
-	"wire_test/pkg/auth"
+	"wire_test/di"
 	"wire_test/pkg/config"
 )
-
-type flagDetails struct {
-	content interface{}
-	name    string
-	help    string
-}
 
 var email = &flagDetails{
 	name: "email",
@@ -30,32 +23,18 @@ var loginCmd = &cobra.Command{
 	Long: `Lets you access your gmail account.
 It has to be done before any of the other operations are.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		promptForMissingData([]*flagDetails{email, password})
-		authenticator, err := auth.InitializeAuthenticator(config.GoogleSmtpAddress, config.StorageDirectory)
+		authenticator, closeup, err := di.InitializeAuthenticator(config.GoogleSmtpAddress, config.StorageDirectory)
+		defer closeup()
 		if err != nil {
 			cmd.PrintErrf("authenticator init failed: %v\n", err)
 			return
 		}
+		promptForMissingFlags([]*flagDetails{email, password})
 		err = authenticator.Login(*email.content.(*string), *password.content.(*string))
 		if err != nil {
 			cmd.PrintErrf("failed to authenticate: %v\n", err)
 		}
 	},
-}
-
-func promptForMissingData(fd []*flagDetails) {
-	for _, details := range fd {
-		if *details.content.(*string) != "" {
-			continue
-		}
-		for {
-			fmt.Printf("%s: ", details.help)
-			_, err := fmt.Scanf("%s", details.content)
-			if err == nil {
-				break
-			}
-		}
-	}
 }
 
 func init() {

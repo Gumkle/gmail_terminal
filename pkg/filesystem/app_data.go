@@ -2,6 +2,7 @@ package filesystem
 
 import (
 	"fmt"
+	"io"
 	"io/fs"
 	"os"
 	"strings"
@@ -45,4 +46,17 @@ func (f *FileSystem) Remove(path string) error {
 		return fmt.Errorf("failed to remove file: %w", err)
 	}
 	return nil
+}
+
+func (f *FileSystem) Read(source string) (string, error) {
+	fullPath := fmt.Sprintf("%s/%s", f.root, source)
+	file, err := os.Open(fullPath)
+	if err != nil {
+		return "", fmt.Errorf("failed to read file: %w", err)
+	}
+	contents, err := io.ReadAll(file)
+	if err != nil {
+		return "", fmt.Errorf("failed to read file: %w", err)
+	}
+	return string(contents), nil
 }

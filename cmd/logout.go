@@ -5,7 +5,7 @@ package cmd
 
 import (
 	"github.com/spf13/cobra"
-	"wire_test/pkg/auth"
+	"wire_test/di"
 	"wire_test/pkg/config"
 )
 
@@ -20,25 +20,20 @@ Cobra is a CLI library for Go that empowers applications.
 This application is a tool to generate the needed files
 to quickly create a Cobra application.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		authenticator, err := auth.InitializeAuthenticator(config.GoogleSmtpAddress, config.StorageDirectory)
+		authenticator, closeup, err := di.InitializeAuthenticator(config.GoogleSmtpAddress, config.StorageDirectory)
+		defer closeup()
 		if err != nil {
-			cmd.PrintErrf("authenticator init failed: %v\n", err)
+			cmd.Println(err)
 			return
 		}
-		authenticator.Logout()
+		err = authenticator.Logout()
+		if err != nil {
+			cmd.Println(err)
+			return
+		}
 	},
 }
 
 func init() {
 	rootCmd.AddCommand(logoutCmd)
-
-	// Here you will define your flags and configuration settings.
-
-	// Cobra supports Persistent Flags which will work for this command
-	// and all subcommands, e.g.:
-	// logoutCmd.PersistentFlags().String("foo", "", "A help for foo")
-
-	// Cobra supports local flags which will only run when this command
-	// is called directly, e.g.:
-	// logoutCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
 }

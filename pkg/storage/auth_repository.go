@@ -1,25 +1,33 @@
 package storage
 
-import "fmt"
+import (
+	"fmt"
+	"strings"
+)
 
 type AuthRepository struct {
-	Database SaverRemover
+	Database SaverRemoverReader
 }
 
-type Saver interface {
+type saver interface {
 	Save(destination, contents string) error
 }
 
-type Remover interface {
+type remover interface {
 	Remove(destination string) error
 }
 
-type SaverRemover interface {
-	Saver
-	Remover
+type reader interface {
+	Read(source string) (string, error)
 }
 
-func NewAuthRepository(saver SaverRemover) *AuthRepository {
+type SaverRemoverReader interface {
+	saver
+	remover
+	reader
+}
+
+func NewAuthRepository(saver SaverRemoverReader) *AuthRepository {
 	return &AuthRepository{
 		Database: saver,
 	}
@@ -39,4 +47,13 @@ func (a *AuthRepository) Purge() error {
 		return fmt.Errorf("failed to purge credentials: %w", err)
 	}
 	return nil
+}
+
+func (a *AuthRepository) Read() (string, string, error) {
+	contents, err := a.Database.Read("credentials")
+	if err != nil {
+		return "", "", fmt.Errorf("failed to read credentials: %v", err)
+	}
+	splitted := strings.Split(contents, ":")
+	return splitted[0], splitted[1], nil
 }
